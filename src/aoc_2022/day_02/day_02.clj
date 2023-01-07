@@ -39,12 +39,12 @@
              "Y" 0
              "Z" 3))))
 
-(defn choose-p2-and-score-round [[p1-choice intended-outcome]]
+(defn choose-strategy [[p1-choice intended-outcome]]
   (let [p2-choice (case intended-outcome
                     "X" (loses-to p1-choice)
                     "Y" (ties-to p1-choice)
                     "Z" (wins-to p1-choice))]
-    (score-round [p1-choice p2-choice])))
+    [p1-choice p2-choice]))
 
 (defn day-02 []
  (let [strategy-guide (->> "day_02.txt"
@@ -54,7 +54,8 @@
                   (map score-round)
                   (apply +))
        part2 (->> strategy-guide
-                  (map choose-p2-and-score-round)
+                  (map choose-strategy)
+                  (map score-round)
                   (apply +))]
    (do (println "Part 1:" part1)
        (println "Part 2:" part2))))
