@@ -31,24 +31,16 @@
        :rock 1
        :paper 2
        :scissors 3)
-     (case p1-choice
-       :rock (case p2-choice
-               :rock 3
-               :paper 6
-               :scissors 0)
-       :paper (case p2-choice
-                :rock 0
-                :paper 3
-                :scissors 6)
-       :scissors (case p2-choice
-                   :rock 6
-                   :paper 0
-                   :scissors 3))))
+     (cond
+       (= p2-choice (wins-to p1-choice)) 6
+       (= p2-choice p1-choice) 3
+       :else 0)))
 
-(defn choose-strategy [[p1-choice-raw outcome-raw]]
-  (let [p1-choice (decode-choice p1-choice-raw)
-        outcome (decode-outcome outcome-raw)
-        p2-choice (case outcome
+(defn decode-strategy [[p1-choice-raw outcome-raw]]
+  [(decode-choice p1-choice-raw) (decode-outcome outcome-raw)])
+
+(defn choose-strategy [[p1-choice outcome]]
+  (let [p2-choice (case outcome
                     :lose (loses-to p1-choice)
                     :draw p1-choice
                     :win (wins-to p1-choice))]
@@ -63,6 +55,7 @@
                   (map score-round)
                   (apply +))
        part2 (->> strategy-guide
+                  (map decode-strategy)
                   (map choose-strategy)
                   (map score-round)
                   (apply +))]
