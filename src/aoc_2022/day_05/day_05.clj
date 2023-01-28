@@ -7,6 +7,19 @@
          (fn [s]
            (update-in s [n] #(conj % c)))))
 
+(defn get-from-stacks [stacks n]
+  (-> @stacks (nth n) first))
+
+(defn pop-from-stacks! [stacks n]
+  (swap! stacks 
+         (fn [s]
+           (update-in s [n] #(drop 1 %)))))
+
+(defn get-top-layer [stacks]
+  (clojure.string/join 
+                       (for [stack @stacks]
+                         (-> stack first str))))
+
 (defn init-stacks [raw-data]
   (let [reversed-data (reverse raw-data)
         num-stacks (-> reversed-data (nth 1) (clojure.string/split #" ") last Integer/parseInt)
@@ -20,15 +33,24 @@
                          (when (not= char-at-index \space)
                            (push-to-stacks! stacks i char-at-index)))))
                    crates-data))
-      @stacks)))
+      stacks)))
 
 (defn get-instruction [row]
   (let [raw-ints (-> row (clojure.string/split #"move | from | to "))]
     {:count (-> raw-ints (nth 1) Integer/parseInt)
-     :from (-> raw-ints (nth 2) Integer/parseInt)
-     :to (-> raw-ints (nth 3) Integer/parseInt)}))
+     :from (-> raw-ints (nth 2) Integer/parseInt (- 1))
+     :to (-> raw-ints (nth 3) Integer/parseInt (- 1))}))
 
-(defn get-top-set [stacks])
+(defn apply-instruction! [instruction stacks]
+  (let [count (:count instruction)
+        from-index (:from instruction)
+        to-index (:to instruction)]
+    (doseq [i (range 0 count)]
+      (let [char-to-move (get-from-stacks stacks from-index)]
+        (when (and (some? char-to-move)
+                   (not= char-to-move \space))
+          (do (pop-from-stacks! stacks from-index))
+              (push-to-stacks! stacks to-index char-to-move))))))
 
 (defn day-05 []
  (let [stacks (->> "day_05.txt"
@@ -39,13 +61,13 @@
                          read-resource
                          (filter #(clojure.string/starts-with? % "move"))
                          (map get-instruction))
-       part1 nil #_(->> ranges
-                  (map range-contains-other?)
-                  (remove false?)
-                  count)
+       _ (doseq [instruction instructions]
+           (apply-instruction! instruction stacks))
+       
+       part1 (get-top-layer stacks)
        part2 nil #_(->> ranges
                   (map range-contains-at-all?)
                   (remove false?)
                   count)]
-   (do (println "Part 1:" stacks)
-       #_(println "Part 2:" instructions))))
+   (do (println "Part 1:" part1)
+       (println "Part 2:" nil))))
