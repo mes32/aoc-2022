@@ -16,8 +16,7 @@
            (update-in s [n] #(drop 1 %)))))
 
 (defn get-top-layer [stacks]
-  (clojure.string/join 
-                       (for [stack @stacks]
+  (clojure.string/join (for [stack @stacks]
                          (-> stack first str))))
 
 (defn init-stacks [raw-data]
@@ -52,6 +51,17 @@
           (do (pop-from-stacks! stacks from-index))
               (push-to-stacks! stacks to-index char-to-move))))))
 
+(defn apply-instruction-2! [instruction stacks]
+  (let [count (:count instruction)
+        from-index (:from instruction)
+        to-index (:to instruction)
+        chars-to-move (reverse (vec (take count (nth @stacks from-index))))]
+    (do
+      (doseq [i (range 0 count)]
+        (pop-from-stacks! stacks from-index))
+      (doseq [c chars-to-move]
+        (push-to-stacks! stacks to-index c)))))
+
 (defn day-05 []
  (let [stacks (->> "day_05.txt"
                    read-resource
@@ -63,11 +73,13 @@
                          (map get-instruction))
        _ (doseq [instruction instructions]
            (apply-instruction! instruction stacks))
-       
        part1 (get-top-layer stacks)
-       part2 nil #_(->> ranges
-                  (map range-contains-at-all?)
-                  (remove false?)
-                  count)]
+       stacks-2 (->> "day_05.txt"
+                     read-resource
+                     (filter #(not (clojure.string/starts-with? % "move")))
+                     init-stacks)
+        _ (doseq [instruction instructions]
+           (apply-instruction-2! instruction stacks-2))
+       part2 (get-top-layer stacks-2)]
    (do (println "Part 1:" part1)
-       (println "Part 2:" nil))))
+       (println "Part 2:" part2))))
